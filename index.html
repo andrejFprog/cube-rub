@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rubikova kostka</title>
+  <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { background:#1a1a2e; font-family:Arial,sans-serif; overflow:hidden; user-select:none; -webkit-user-select:none; }
+      #controls {
+          position:absolute; top:16px; left:50%; transform:translateX(-50%);
+          display:flex; gap:8px; z-index:10; align-items:center;
+          background:rgba(0,0,0,0.55); padding:8px 16px; border-radius:14px;
+          flex-wrap:wrap; justify-content:center;
+      }
+      #counter { color:#ffdd88; font-size:14px; font-weight:bold; min-width:70px; }
+      #timer   { color:#88ffdd; font-size:14px; font-weight:bold; min-width:60px; }
+      button {
+          padding:7px 14px; font-size:13px; font-weight:bold;
+          border:none; border-radius:8px; cursor:pointer;
+          -webkit-tap-highlight-color:transparent;
+          touch-action:manipulation;
+      }
+      .go  { background:#1a5c3a; color:#7fffb0; }
+      .rst { background:#5c1a1a; color:#ffaaaa; }
+      .sz  { background:#2d2d5e; color:#aaaaff; }
+      .sz.active { background:#4444aa; color:#fff; }
+  </style>
+</head>
+<body>
+
+<div id="controls">
+  <button class="sz active" id="btn-3x3">3×3</button>
+  <button class="sz"        id="btn-2x2">2×2</button>
+  <span id="counter">Tahy: 0</span>
+  <span id="timer">00:00</span>
+  <button class="go"  id="btn-scramble">Zamíchat</button>
+  <button class="rst" id="btn-reset">Reset</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // ── State ─────────────────────────────────────────────────────
+  var cubies    = [];
+  var animQueue = [];
+  var animating = false;
+  var moveCount = 0;
+  var rotX = 0.42, rotY = 0.55;
+  var dragState = null;
+  var timerInterval = null, timerStart = null, timerRunning = false;
+  var cubeSize = 3; // 2 or 3
+
+  // ── Scene ─────────────────────────────────────────────────────
+  var scene    = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1a2e);
+  var camera   = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 100);
+  var renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(devicePixelRatio);
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  var dl = new THREE.DirectionalLight(0xffffff, 0.75);
+  dl.position.set(6,10,8); scene.add(dl);
+  var dl2 = new THREE.DirectionalLight(0x8899ff, 0.25);
+  dl2.position.set(-5,-4,-6); scene.add(dl2);
+
+  window.addEventListener('resize', function(){
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  // ── Geometry ──────────────────────────────────────────────────
+  var SZ=1.0, GAP=0.06, STEP=SZ+GAP, SI=0.42, SD=0.028, H=SZ/2;
+  var BLACK    = 0x111111;
+  var FACE_HEX = {U:0xffdd00,D:0xffffff,F:0xff7700,B:0xee2211,R:0x1177ee,L:0x22bb44};
+  var USE_TEXTURES = true; // <---- můžeš kdykoliv vypnout na false
+
+  var loader = new THREE.TextureLoader();
+
+  var FACE_TEXTURE = {
+    U: loader.load("img/u.png"),
+    D: loader.load("img/d.png"),
+    F: loader.load("img/f.png"),
+    B: loader.load("img/b.png"),
+    R: loader.load("img/r.png"),
+    L: loader.load("img/l.png"),
+  };
+
+  function getFaceMaterial(face, gx, gy, gz) {
+    if (!USE_TEXTURES)
+      return new THREE.MeshLambertMaterial({ color: FACE_HEX[face] });
+
+    // 🔥 DŮLEŽITÉ: každý dílek vlastní texturu
+    var baseTex = FACE_TEXTURE[face];
+    var tex = baseTex.clone();
+
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+
+    var N = cubeSize;
+    var half = (N - 1) / 2;
+
+    var u = 0, v = 0;
+
+    if (face === 'F' || face === 'B') {
+      u = (gx + half + 0.5) / N;
+      v = (gy + half + 0.5) / N;
+    }
+    if (face === 'R' || face === 'L') {
+      u = (gz + half + 0.5) / N;
+      v = (gy + half + 0.5) / N;
+    }
+    if (face === 'U' || face === 'D') {
+      u = (gx + half + 0.5) / N;
+      v = (gz + half + 0.5) / N;
+    }
+
+    v = 1 - v;
+
+    tex.repeat.set(1 / N, 1 / N);
+    tex.offset.set(u - 1 / (2 * N), v - 1 / (2 * N));
+
+    tex.needsUpdate = true;
+
+    return new THREE.MeshLambertMaterial({ map: tex });
+  }
+  function makeGeo(slot) {
+    if (slot===0||slot===1) return new THREE.BoxGeometry(SD,   SI*2, SI*2);
+    if (slot===2||slot===3) return new THREE.BoxGeometry(SI*2, SD,   SI*2);
+    return                         new THREE.BoxGeometry(SI*2, SI*2, SD  );
+  }
+  var SLOT = [
+    {pos:[ H+SD,   0,      0  ], face:'R'},
+    {pos:[-(H+SD), 0,      0  ], face:'L'},
+    {pos:[ 0,    H+SD,     0  ], face:'U'},
+    {pos:[ 0,  -(H+SD),    0  ], face:'D'},
+    {pos:[ 0,    0,    H+SD   ], face:'F'},
+    {pos:[ 0,    0,  -(H+SD)  ], face:'B'},
+  ];
+
+  // For a cube of size N, grid coords go from -(N-1)/2 to +(N-1)/2
+  // e.g. N=3: -1,0,1   N=2: -0.5, 0.5
+  function gridCoords(N) {
+    var coords = [];
+    for (var i=0; i<N; i++) coords.push(i - (N-1)/2);
+    return coords;
+  }
+
+  function createCubie(gx,gy,gz, N) {
+    var g = new THREE.Group();
+    g.position.set(gx*STEP, gy*STEP, gz*STEP);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(SZ,SZ,SZ), new THREE.MeshLambertMaterial({color:BLACK})));
+    var half = (N-1)/2;
+    var exp = new Set();
+    if (Math.abs(gx-half)<0.01)  exp.add(0); // +X = R
+    if (Math.abs(gx+half)<0.01)  exp.add(1); // -X = L
+    if (Math.abs(gy-half)<0.01)  exp.add(2); // +Y = U
+    if (Math.abs(gy+half)<0.01)  exp.add(3); // -Y = D
+    if (Math.abs(gz-half)<0.01)  exp.add(4); // +Z = F
+    if (Math.abs(gz+half)<0.01)  exp.add(5); // -Z = B
+    for (var i=0;i<6;i++) {
+      var mat;
+
+      if (!exp.has(i)) {
+        mat = new THREE.MeshLambertMaterial({ color: BLACK });
+      } else {
+        mat = getFaceMaterial(SLOT[i].face, gx, gy, gz);
+      }
+
+      var m = new THREE.Mesh(makeGeo(i), mat);
+      m.position.set(SLOT[i].pos[0], SLOT[i].pos[1], SLOT[i].pos[2]);
+      g.add(m);
+    }
+    return {group:g, gx:gx, gy:gy, gz:gz};
+  }
+
+  function buildCube() {
+    for (var i=0;i<cubies.length;i++) scene.remove(cubies[i].group);
+    cubies=[];
+    var coords = gridCoords(cubeSize);
+    for (var xi=0;xi<coords.length;xi++)
+      for (var yi=0;yi<coords.length;yi++)
+        for (var zi=0;zi<coords.length;zi++) {
+          var c = createCubie(coords[xi], coords[yi], coords[zi], cubeSize);
+          scene.add(c.group); cubies.push(c);
+        }
+  }
+
+  // ── Move system ───────────────────────────────────────────────
+  // For NxN, layers are identified by their grid coord value
+  // For 3x3: R=1, L=-1, U=1, D=-1, F=1, B=-1
+  // For 2x2: R=0.5, L=-0.5, U=0.5, D=-0.5, F=0.5, B=-0.5
+
+  function half() { return (cubeSize-1)/2; }
+
+  var MAXIS = {
+    R: new THREE.Vector3( 1,0,0), Ri: new THREE.Vector3(-1,0,0),
+    L: new THREE.Vector3(-1,0,0), Li: new THREE.Vector3( 1,0,0),
+    U: new THREE.Vector3(0, 1,0), Ui: new THREE.Vector3(0,-1,0),
+    D: new THREE.Vector3(0,-1,0), Di: new THREE.Vector3(0, 1,0),
+    F: new THREE.Vector3(0,0, 1), Fi: new THREE.Vector3(0,0,-1),
+    B: new THREE.Vector3(0,0,-1), Bi: new THREE.Vector3(0,0, 1),
+  };
+  var MBASE = {R:'R',Ri:'R',L:'L',Li:'L',U:'U',Ui:'U',D:'D',Di:'D',F:'F',Fi:'F',B:'B',Bi:'B'};
+
+  function layerFilter(face) {
+    var h = half();
+    if (face==='R') return function(c){return Math.abs(c.gx-h)<0.01;};
+    if (face==='L') return function(c){return Math.abs(c.gx+h)<0.01;};
+    if (face==='U') return function(c){return Math.abs(c.gy-h)<0.01;};
+    if (face==='D') return function(c){return Math.abs(c.gy+h)<0.01;};
+    if (face==='F') return function(c){return Math.abs(c.gz-h)<0.01;};
+    if (face==='B') return function(c){return Math.abs(c.gz+h)<0.01;};
+  }
+
+  var SNAPS = [0, 0.5, Math.SQRT1_2, Math.sqrt(0.75), 1];
+  function snapC(v) {
+    var best=0,bd=Infinity;
+    for (var i=0;i<SNAPS.length;i++)
+      for (var s=-1;s<=1;s+=2){var d=Math.abs(v-s*SNAPS[i]);if(d<bd){bd=d;best=s*SNAPS[i];}}
+    return best;
+  }
+  function snapQ(obj){var q=obj.quaternion;q.set(snapC(q.x),snapC(q.y),snapC(q.z),snapC(q.w));q.normalize();}
+  function ease(t){return t*t*(3-2*t);}
+
+  function processQueue() {
+    if (!animQueue.length){animating=false;return;}
+    animating=true;
+    var mv=animQueue.shift(), base=MBASE[mv], axis=MAXIS[mv];
+    var filter=layerFilter(base);
+    var aff=cubies.filter(filter);
+    var pivot=new THREE.Group(); scene.add(pivot);
+    for (var i=0;i<aff.length;i++) pivot.attach(aff[i].group);
+    var t0=performance.now(), prev=0;
+    function frame(now) {
+      var t=Math.min(1,(now-t0)/130);
+      var a=ease(t)*(Math.PI/2);
+      pivot.rotateOnAxis(axis,a-prev); prev=a;
+      if (t<1){requestAnimationFrame(frame);return;}
+      for (var i=0;i<aff.length;i++) {
+        var c=aff[i]; scene.attach(c.group);
+        var nx=Math.round(c.group.position.x/STEP*2)/2*STEP;
+        var ny=Math.round(c.group.position.y/STEP*2)/2*STEP;
+        var nz=Math.round(c.group.position.z/STEP*2)/2*STEP;
+        c.group.position.set(nx,ny,nz);
+        c.gx=nx/STEP; c.gy=ny/STEP; c.gz=nz/STEP;
+        snapQ(c.group);
+      }
+      scene.remove(pivot);
+      moveCount++;
+      document.getElementById('counter').textContent='Tahy: '+moveCount;
+      if (!timerRunning){startTimer();}
+      setTimeout(processQueue,0);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function doMove(mv){animQueue.push(mv);if(!animating)processQueue();}
+
+  // ── Timer ─────────────────────────────────────────────────────
+  function startTimer(){
+    timerRunning=true; timerStart=Date.now();
+    clearInterval(timerInterval);
+    timerInterval=setInterval(function(){
+      var el=Date.now()-timerStart;
+      var s=Math.floor(el/1000)%60, m=Math.floor(el/60000);
+      document.getElementById('timer').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    },500);
+  }
+  function resetTimer(){
+    clearInterval(timerInterval); timerRunning=false;
+    document.getElementById('timer').textContent='00:00';
+  }
+
+  // ── Scramble / Reset ──────────────────────────────────────────
+  function scramble(){
+    var mvs=['R','Ri','L','Li','U','Ui','D','Di','F','Fi','B','Bi'],last='';
+    animQueue=[]; animating=false;
+    var n = cubeSize===2 ? 10 : 20;
+    for (var i=0;i<n;i++){
+      var m; do{m=mvs[Math.floor(Math.random()*mvs.length)];}while(m===last);
+      last=m; animQueue.push(m);
+    }
+    moveCount=0;
+    document.getElementById('counter').textContent='Tahy: 0';
+    resetTimer();
+    processQueue();
+  }
+
+  function resetCube(){
+    animQueue=[]; animating=false; moveCount=0;
+    document.getElementById('counter').textContent='Tahy: 0';
+    resetTimer();
+    buildCube();
+  }
+
+  function switchSize(n){
+    cubeSize=n;
+    document.getElementById('btn-3x3').classList.toggle('active', n===3);
+    document.getElementById('btn-2x2').classList.toggle('active', n===2);
+    animQueue=[]; animating=false; moveCount=0;
+    document.getElementById('counter').textContent='Tahy: 0';
+    resetTimer();
+    buildCube();
+  }
+
+  document.getElementById('btn-scramble').addEventListener('click', scramble);
+  document.getElementById('btn-reset').addEventListener('click', resetCube);
+  document.getElementById('btn-3x3').addEventListener('click', function(){switchSize(3);});
+  document.getElementById('btn-2x2').addEventListener('click', function(){switchSize(2);});
+
+  // ── Drag-to-turn + orbit ──────────────────────────────────────
+  var raycaster=new THREE.Raycaster();
+  var CAM_R=13.0;
+  var DRAG_THR=10;
+
+  function raycast(cx,cy){
+    var ndc=new THREE.Vector2((cx/innerWidth)*2-1,(cy/innerHeight)*-2+1);
+    raycaster.setFromCamera(ndc,camera);
+    var meshes=[];
+    for (var i=0;i<cubies.length;i++){var ch=cubies[i].group.children;for(var j=0;j<ch.length;j++)meshes.push(ch[j]);}
+    var hits=raycaster.intersectObjects(meshes);
+    if (!hits.length) return null;
+    var hit=hits[0], hc=null;
+    for (var i=0;i<cubies.length;i++){if(cubies[i].group.children.indexOf(hit.object)!==-1){hc=cubies[i];break;}}
+    if (!hc) return null;
+    var norm=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    return {cubie:hc,normal:norm};
+  }
+
+  function inferMove(hitNormal,dx,dy,hitCubie){
+    var nx=Math.round(hitNormal.x),ny=Math.round(hitNormal.y),nz=Math.round(hitNormal.z);
+    var sY=Math.sin(rotY),cY=Math.cos(rotY),sX=Math.sin(rotX),cX=Math.cos(rotX);
+    var right=new THREE.Vector3(cY,0,-sY);
+    var up=new THREE.Vector3(sY*sX,cX,cY*sX);
+    var drag=new THREE.Vector3().addScaledVector(right,dx).addScaledVector(up,-dy).normalize();
+    var fN=new THREE.Vector3(nx,ny,nz);
+    drag.addScaledVector(fN,-drag.dot(fN)).normalize();
+    var axes=[
+      new THREE.Vector3(1,0,0),new THREE.Vector3(-1,0,0),
+      new THREE.Vector3(0,1,0),new THREE.Vector3(0,-1,0),
+      new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,-1),
+    ];
+    var best=null,bd=0;
+    for (var i=0;i<axes.length;i++){var d=drag.dot(axes[i]);if(d>bd){bd=d;best=axes[i];}}
+    if (!best) return null;
+    var rA=new THREE.Vector3().crossVectors(fN,best).normalize();
+    var rx=Math.round(rA.x),ry=Math.round(rA.y),rz=Math.round(rA.z);
+    var cx=hitCubie.gx,cy=hitCubie.gy,cz=hitCubie.gz;
+    var h=half();
+    if (ry!==0){
+      if (Math.abs(cy-h)<0.01)  return ry>0?'U':'Ui';
+      if (Math.abs(cy+h)<0.01)  return ry>0?'Di':'D';
+      return ry>0?'U':'Ui';
+    }
+    if (rx!==0){
+      if (Math.abs(cx-h)<0.01)  return rx>0?'R':'Ri';
+      if (Math.abs(cx+h)<0.01)  return rx>0?'Li':'L';
+      return rx>0?'R':'Ri';
+    }
+    if (rz!==0){
+      if (Math.abs(cz-h)<0.01)  return rz>0?'F':'Fi';
+      if (Math.abs(cz+h)<0.01)  return rz>0?'Bi':'B';
+      return rz>0?'F':'Fi';
+    }
+    return null;
+  }
+
+  function onDown(cx,cy){dragState={mode:'undecided',sx:cx,sy:cy,lx:cx,ly:cy,hit:raycast(cx,cy)};}
+  function onMove(cx,cy){
+    if (!dragState) return;
+    var dx=cx-dragState.sx,dy=cy-dragState.sy;
+    if (dragState.mode==='undecided'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR)
+      dragState.mode=dragState.hit?'turn':'orbit';
+    if (dragState.mode==='orbit'){
+      rotY-=(cx-dragState.lx)*0.006;
+      rotX+=(cy-dragState.ly)*0.006;
+      rotX=Math.max(-1.4,Math.min(1.4,rotX));
+    }
+    dragState.lx=cx; dragState.ly=cy;
+  }
+  function onUp(cx,cy){
+    if (!dragState) return;
+    var dx=cx-dragState.sx,dy=cy-dragState.sy;
+    if (dragState.mode==='turn'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR&&dragState.hit){
+      var mv=inferMove(dragState.hit.normal,dx,dy,dragState.hit.cubie);
+      if (mv) doMove(mv);
+    }
+    dragState=null;
+  }
+
+  renderer.domElement.addEventListener('mousedown',function(e){onDown(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',function(e){onMove(e.clientX,e.clientY);});
+  window.addEventListener('mouseup',function(e){onUp(e.clientX,e.clientY);});
+  renderer.domElement.addEventListener('touchstart',function(e){e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+  renderer.domElement.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+  renderer.domElement.addEventListener('touchend',function(e){e.preventDefault();var t=e.changedTouches[0];onUp(t.clientX,t.clientY);},{passive:false});
+
+  // ── Render loop ───────────────────────────────────────────────
+  function animate(){
+    requestAnimationFrame(animate);
+    camera.position.set(
+      CAM_R*Math.sin(rotY)*Math.cos(rotX),
+      CAM_R*Math.sin(rotX),
+      CAM_R*Math.cos(rotY)*Math.cos(rotX)
+    );
+    camera.lookAt(0,0,0);
+    renderer.render(scene,camera);
+  }
+
+  buildCube();
+  animate();
+</script>
+</body>
+</html>

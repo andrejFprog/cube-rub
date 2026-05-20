@@ -1,121 +1,121 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rubikova kostka</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#1a1a2e; font-family:Arial,sans-serif; overflow:hidden; user-select:none; -webkit-user-select:none; }
-#controls {
-  position:absolute; top:16px; left:50%; transform:translateX(-50%);
-  display:flex; gap:8px; z-index:10; align-items:center;
-  background:rgba(0,0,0,0.55); padding:8px 16px; border-radius:14px;
-  flex-wrap:wrap; justify-content:center; max-width:98vw;
-}
-#counter { color:#ffdd88; font-size:14px; font-weight:bold; min-width:70px; }
-#timer   { color:#88ffdd; font-size:14px; font-weight:bold; min-width:60px; }
-button {
-  padding:7px 14px; font-size:13px; font-weight:bold;
-  border:none; border-radius:8px; cursor:pointer;
-  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
-}
-.go  { background:#1a5c3a; color:#7fffb0; }
-.rst { background:#5c1a1a; color:#ffaaaa; }
-.sz  { background:#2d2d5e; color:#aaaaff; }
-.sz.active { background:#4444aa; color:#fff; }
-.slv { background:#3a2d5e; color:#ddaaff; }
-.img-btn { background:#2d3a1e; color:#aaffaa; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rubikova kostka</title>
+  <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { background:#1a1a2e; font-family:Arial,sans-serif; overflow:hidden; user-select:none; -webkit-user-select:none; }
+      #controls {
+          position:absolute; top:16px; left:50%; transform:translateX(-50%);
+          display:flex; gap:8px; z-index:10; align-items:center;
+          background:rgba(0,0,0,0.55); padding:8px 16px; border-radius:14px;
+          flex-wrap:wrap; justify-content:center; max-width:98vw;
+      }
+      #counter { color:#ffdd88; font-size:14px; font-weight:bold; min-width:70px; }
+      #timer   { color:#88ffdd; font-size:14px; font-weight:bold; min-width:60px; }
+      button {
+          padding:7px 14px; font-size:13px; font-weight:bold;
+          border:none; border-radius:8px; cursor:pointer;
+          -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+      }
+      .go  { background:#1a5c3a; color:#7fffb0; }
+      .rst { background:#5c1a1a; color:#ffaaaa; }
+      .sz  { background:#2d2d5e; color:#aaaaff; }
+      .sz.active { background:#4444aa; color:#fff; }
+      .slv { background:#3a2d5e; color:#ddaaff; }
+      .img-btn { background:#2d3a1e; color:#aaffaa; }
 
-#solved-msg {
-  display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.88); color:#7fffb0;
-  font-size:28px; font-weight:bold; text-align:center;
-  padding:28px 40px; border-radius:20px; z-index:20;
-  border:2px solid #7fffb0; pointer-events:none;
-}
-#solved-msg span { display:block; color:#ffdd88; font-size:16px; margin-top:8px; }
+      #solved-msg {
+          display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+          background:rgba(0,0,0,0.88); color:#7fffb0;
+          font-size:28px; font-weight:bold; text-align:center;
+          padding:28px 40px; border-radius:20px; z-index:20;
+          border:2px solid #7fffb0; pointer-events:none;
+      }
+      #solved-msg span { display:block; color:#ffdd88; font-size:16px; margin-top:8px; }
 
-#seq-bar {
-  position:absolute; bottom:0; left:0; right:0;
-  background:rgba(0,0,0,0.6); padding:8px 12px 10px;
-  display:flex; align-items:center; gap:6px; z-index:10; overflow:hidden;
-}
-#seq-label { color:#888; font-size:12px; white-space:nowrap; }
-#seq-list { display:flex; gap:5px; overflow-x:auto; flex:1; scrollbar-width:none; }
-#seq-list::-webkit-scrollbar { display:none; }
-.mv { padding:3px 8px; border-radius:6px; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0; }
-.mv-outer  { background:#2d2d5e; color:#aaccff; }
-.mv-middle { background:#3d2d1e; color:#ffcc88; }
-.mv-new { animation:pop .25s ease; }
-@keyframes pop { from{transform:scale(1.4);opacity:.5} to{transform:scale(1);opacity:1} }
+      #seq-bar {
+          position:absolute; bottom:0; left:0; right:0;
+          background:rgba(0,0,0,0.6); padding:8px 12px 10px;
+          display:flex; align-items:center; gap:6px; z-index:10; overflow:hidden;
+      }
+      #seq-label { color:#888; font-size:12px; white-space:nowrap; }
+      #seq-list { display:flex; gap:5px; overflow-x:auto; flex:1; scrollbar-width:none; }
+      #seq-list::-webkit-scrollbar { display:none; }
+      .mv { padding:3px 8px; border-radius:6px; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0; }
+      .mv-outer  { background:#2d2d5e; color:#aaccff; }
+      .mv-middle { background:#3d2d1e; color:#ffcc88; }
+      .mv-new { animation:pop .25s ease; }
+      @keyframes pop { from{transform:scale(1.4);opacity:.5} to{transform:scale(1);opacity:1} }
 
-/* Panel base */
-.panel {
-  display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  background:rgba(10,10,30,0.97); color:#fff;
-  border:1px solid #4444aa; border-radius:16px;
-  width:min(460px,96vw); z-index:30;
-  box-shadow:0 8px 32px rgba(0,0,0,.7);
-  max-height:90vh; overflow-y:auto;
-}
-.panel-header {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:14px 18px 10px; border-bottom:1px solid #333;
-  font-size:16px; font-weight:bold; color:#ddaaff; position:sticky; top:0;
-  background:rgba(10,10,30,0.97);
-}
-.panel-close { background:none; border:none; color:#888; font-size:18px; cursor:pointer; padding:0 4px; }
-.panel-close:hover { color:#fff; }
-.panel-body { padding:16px 18px 20px; }
+      /* Panel base */
+      .panel {
+          display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+          background:rgba(10,10,30,0.97); color:#fff;
+          border:1px solid #4444aa; border-radius:16px;
+          width:min(460px,96vw); z-index:30;
+          box-shadow:0 8px 32px rgba(0,0,0,.7);
+          max-height:90vh; overflow-y:auto;
+      }
+      .panel-header {
+          display:flex; justify-content:space-between; align-items:center;
+          padding:14px 18px 10px; border-bottom:1px solid #333;
+          font-size:16px; font-weight:bold; color:#ddaaff; position:sticky; top:0;
+          background:rgba(10,10,30,0.97);
+      }
+      .panel-close { background:none; border:none; color:#888; font-size:18px; cursor:pointer; padding:0 4px; }
+      .panel-close:hover { color:#fff; }
+      .panel-body { padding:16px 18px 20px; }
 
-/* Solver */
-#solver-status { color:#88ffdd; font-size:13px; margin-bottom:12px; min-height:18px; }
-#solver-moves { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; min-height:32px; }
-#solver-moves .smv {
-  padding:4px 10px; border-radius:6px; font-size:13px; font-weight:bold;
-  background:#2d2d5e; color:#aaccff; cursor:default;
-}
-#solver-moves .smv.done  { background:#1a3a1a; color:#88ff88; }
-#solver-moves .smv.active{ background:#4444aa; color:#fff; transform:scale(1.15); }
-#solver-play {
-  width:100%; padding:9px; font-size:14px; font-weight:bold;
-  background:#1a5c3a; color:#7fffb0; border:none; border-radius:8px; cursor:pointer;
-}
+      /* Solver */
+      #solver-status { color:#88ffdd; font-size:13px; margin-bottom:12px; min-height:18px; }
+      #solver-moves { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; min-height:32px; }
+      #solver-moves .smv {
+          padding:4px 10px; border-radius:6px; font-size:13px; font-weight:bold;
+          background:#2d2d5e; color:#aaccff; cursor:default;
+      }
+      #solver-moves .smv.done  { background:#1a3a1a; color:#88ff88; }
+      #solver-moves .smv.active{ background:#4444aa; color:#fff; transform:scale(1.15); }
+      #solver-play {
+          width:100%; padding:9px; font-size:14px; font-weight:bold;
+          background:#1a5c3a; color:#7fffb0; border:none; border-radius:8px; cursor:pointer;
+      }
 
-/* Image import */
-#img-panel .face-grid {
-  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;
-}
-.face-slot {
-  border:2px dashed #444; border-radius:10px; padding:10px;
-  text-align:center; cursor:pointer; transition:.15s;
-  position:relative; overflow:hidden;
-}
-.face-slot:hover { border-color:#aaaaff; background:rgba(100,100,200,.1); }
-.face-slot input[type=file] { display:none; }
-.face-slot .face-label {
-  font-size:11px; font-weight:bold; margin-bottom:6px;
-  padding:3px 8px; border-radius:5px; display:inline-block;
-}
-.face-slot .face-preview {
-  width:100%; height:70px; object-fit:cover; border-radius:6px;
-  display:none; pointer-events:none;
-}
-.face-slot .face-hint { color:#666; font-size:11px; margin-top:4px; }
-.face-slot.has-img { border-style:solid; border-color:#7fffb0; }
-.face-slot.has-img .face-hint { color:#7fffb0; }
-#apply-images {
-  width:100%; padding:9px; font-size:14px; font-weight:bold;
-  background:#1a5c3a; color:#7fffb0; border:none; border-radius:8px;
-  cursor:pointer; margin-bottom:8px;
-}
-#apply-images:hover { background:#2a8c5a; }
-#reset-images {
-  width:100%; padding:7px; font-size:13px; font-weight:bold;
-  background:#5c1a1a; color:#ffaaaa; border:none; border-radius:8px; cursor:pointer;
-}
-</style>
+      /* Image import */
+      #img-panel .face-grid {
+          display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;
+      }
+      .face-slot {
+          border:2px dashed #444; border-radius:10px; padding:10px;
+          text-align:center; cursor:pointer; transition:.15s;
+          position:relative; overflow:hidden;
+      }
+      .face-slot:hover { border-color:#aaaaff; background:rgba(100,100,200,.1); }
+      .face-slot input[type=file] { display:none; }
+      .face-slot .face-label {
+          font-size:11px; font-weight:bold; margin-bottom:6px;
+          padding:3px 8px; border-radius:5px; display:inline-block;
+      }
+      .face-slot .face-preview {
+          width:100%; height:70px; object-fit:cover; border-radius:6px;
+          display:none; pointer-events:none;
+      }
+      .face-slot .face-hint { color:#666; font-size:11px; margin-top:4px; }
+      .face-slot.has-img { border-style:solid; border-color:#7fffb0; }
+      .face-slot.has-img .face-hint { color:#7fffb0; }
+      #apply-images {
+          width:100%; padding:9px; font-size:14px; font-weight:bold;
+          background:#1a5c3a; color:#7fffb0; border:none; border-radius:8px;
+          cursor:pointer; margin-bottom:8px;
+      }
+      #apply-images:hover { background:#2a8c5a; }
+      #reset-images {
+          width:100%; padding:7px; font-size:13px; font-weight:bold;
+          background:#5c1a1a; color:#ffaaaa; border:none; border-radius:8px; cursor:pointer;
+      }
+  </style>
 </head>
 <body>
 
@@ -126,7 +126,7 @@ button {
   <span id="timer">00:00</span>
   <button class="go"   id="btn-scramble">Zamíchat</button>
   <button class="rst"  id="btn-reset">Reset</button>
-  <button class="slv"  id="btn-solve">🔍 Vyřešit</button>
+
   <button class="img-btn" id="btn-img">🖼 Obrázky</button>
 </div>
 
@@ -168,638 +168,636 @@ button {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ── State ─────────────────────────────────────────────────────
-var cubies=[], animQueue=[], animating=false, moveCount=0, moveHistory=[];
-var rotX=0.42, rotY=0.55, dragState=null;
-var timerInterval=null, timerStart=null, timerRunning=false;
-var cubeSize=3, wasUnsolved=false;
-var faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
+  // ── State ─────────────────────────────────────────────────────
+  var cubies=[], animQueue=[], animating=false, moveCount=0, moveHistory=[];
+  var rotX=0.42, rotY=0.55, dragState=null;
+  var timerInterval=null, timerStart=null, timerRunning=false;
+  var cubeSize=3, wasUnsolved=false;
+  var faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
 
-// ── Scene ─────────────────────────────────────────────────────
-var scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a2e);
-var camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);
-var renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight);
-document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffff,.55));
-var dl=new THREE.DirectionalLight(0xffffff,.75); dl.position.set(6,10,8); scene.add(dl);
-var dl2=new THREE.DirectionalLight(0x8899ff,.25); dl2.position.set(-5,-4,-6); scene.add(dl2);
-window.addEventListener('resize',function(){
-  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);
-});
+  // ── Scene ─────────────────────────────────────────────────────
+  var scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a2e);
+  var camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);
+  var renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight);
+  document.body.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,.55));
+  var dl=new THREE.DirectionalLight(0xffffff,.75); dl.position.set(6,10,8); scene.add(dl);
+  var dl2=new THREE.DirectionalLight(0x8899ff,.25); dl2.position.set(-5,-4,-6); scene.add(dl2);
+  window.addEventListener('resize',function(){
+    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);
+  });
 
-// ── Constants ─────────────────────────────────────────────────
-var SZ=1.0,GAP=0.06,STEP=SZ+GAP,SI=0.42,SD=0.028,H=SZ/2;
-var BLACK=0x111111;
-var FACE_HEX={U:0xffdd00,D:0xffffff,F:0xff7700,B:0xee2211,R:0x1177ee,L:0x22bb44};
-var FACE_NAMES={U:'Horní (žlutá)',D:'Dolní (bílá)',F:'Přední (oranžová)',B:'Zadní (červená)',R:'Pravá (modrá)',L:'Levá (zelená)'};
-var FACE_LABEL_COLOR={U:'#888800',D:'#888888',F:'#884400',B:'#880000',R:'#004488',L:'#004400'};
+  // ── Constants ─────────────────────────────────────────────────
+  var SZ=1.0,GAP=0.06,STEP=SZ+GAP,SI=0.42,SD=0.028,H=SZ/2;
+  var BLACK=0x111111;
+  var FACE_HEX={U:0xffdd00,D:0xffffff,F:0xff7700,B:0xee2211,R:0x1177ee,L:0x22bb44};
+  var FACE_NAMES={U:'Horní (žlutá)',D:'Dolní (bílá)',F:'Přední (oranžová)',B:'Zadní (červená)',R:'Pravá (modrá)',L:'Levá (zelená)'};
+  var FACE_LABEL_COLOR={U:'#888800',D:'#888888',F:'#884400',B:'#880000',R:'#004488',L:'#004400'};
 
-function makeGeo(slot){
-  if(slot===0||slot===1) return new THREE.BoxGeometry(SD,SI*2,SI*2);
-  if(slot===2||slot===3) return new THREE.BoxGeometry(SI*2,SD,SI*2);
-  return new THREE.BoxGeometry(SI*2,SI*2,SD);
-}
-var SLOT=[
-  {pos:[H+SD,0,0],face:'R'},{pos:[-(H+SD),0,0],face:'L'},
-  {pos:[0,H+SD,0],face:'U'},{pos:[0,-(H+SD),0],face:'D'},
-  {pos:[0,0,H+SD],face:'F'},{pos:[0,0,-(H+SD)],face:'B'},
-];
-
-function gridCoords(N){var c=[];for(var i=0;i<N;i++)c.push(i-(N-1)/2);return c;}
-function half(){return(cubeSize-1)/2;}
-
-// ── Image tile helper ─────────────────────────────────────────
-// For a face with image, each cubie's sticker gets a UV-cropped texture
-// N=cubeSize, slot determines which tile (row,col)
-
-function getTileTexture(faceKey, tileRow, tileCol, N) {
-  var img = faceTextures[faceKey];
-  if (!img) return null;
-  var canvas = document.createElement('canvas');
-  var tw = Math.floor(img.width / N), th = Math.floor(img.height / N);
-  canvas.width = tw; canvas.height = th;
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(img, tileCol*tw, tileRow*th, tw, th, 0, 0, tw, th);
-  var tex = new THREE.CanvasTexture(canvas);
-  return tex;
-}
-
-// Map (gx,gy,gz) → tile (row,col) for each face
-function getTileRC(face, c, N) {
-  var h=(N-1)/2;
-  if (face==='U') { // pohled shora: row=gz+h, col=gx+h
-    return {row: Math.round(c.gz+h), col: Math.round(c.gx+h)};
+  function makeGeo(slot){
+    if(slot===0||slot===1) return new THREE.BoxGeometry(SD,SI*2,SI*2);
+    if(slot===2||slot===3) return new THREE.BoxGeometry(SI*2,SD,SI*2);
+    return new THREE.BoxGeometry(SI*2,SI*2,SD);
   }
-  if (face==='D') { // pohled zdola (zrcadlově Z): row=gz+h, col=gx+h
-    return {row: Math.round(c.gz+h), col: Math.round(c.gx+h)};
-  }
-  if (face==='F') { // pohled zepředu: row=h-gy, col=gx+h
-    return {row: Math.round(h-c.gy), col: Math.round(c.gx+h)};
-  }
-  if (face==='B') { // pohled zezadu: row=h-gy, col=h-gx
-    return {row: Math.round(h-c.gy), col: Math.round(h-c.gx)};
-  }
-  if (face==='R') { // pohled zprava: row=h-gy, col=h-gz
-    return {row: Math.round(h-c.gy), col: Math.round(h-c.gz)};
-  }
-  if (face==='L') { // pohled zleva: row=h-gy, col=gz+h
-    return {row: Math.round(h-c.gy), col: Math.round(c.gz+h)};
-  }
-  return {row:0,col:0};
-}
-
-function createCubie(gx,gy,gz,N){
-  var g=new THREE.Group();
-  g.position.set(gx*STEP,gy*STEP,gz*STEP);
-  g.add(new THREE.Mesh(new THREE.BoxGeometry(SZ,SZ,SZ),new THREE.MeshLambertMaterial({color:BLACK})));
-  var hf=(N-1)/2;
-  var exp=new Set();
-  if(Math.abs(gx-hf)<.01)exp.add(0); if(Math.abs(gx+hf)<.01)exp.add(1);
-  if(Math.abs(gy-hf)<.01)exp.add(2); if(Math.abs(gy+hf)<.01)exp.add(3);
-  if(Math.abs(gz-hf)<.01)exp.add(4); if(Math.abs(gz+hf)<.01)exp.add(5);
-
-  var slotFace=['R','L','U','D','F','B'];
-  for(var i=0;i<6;i++){
-    var mat;
-    if(exp.has(i)){
-      var fk=slotFace[i];
-      var img=faceTextures[fk];
-      if(img){
-        var rc=getTileRC(fk,{gx:gx,gy:gy,gz:gz},N);
-        var tex=getTileTexture(fk,rc.row,rc.col,N);
-        mat=new THREE.MeshLambertMaterial({map:tex});
-      } else {
-        mat=new THREE.MeshLambertMaterial({color:FACE_HEX[fk]});
-      }
-    } else {
-      mat=new THREE.MeshLambertMaterial({color:BLACK});
-    }
-    var m=new THREE.Mesh(makeGeo(i),mat);
-    m.position.set(SLOT[i].pos[0],SLOT[i].pos[1],SLOT[i].pos[2]);
-    g.add(m);
-  }
-  return{group:g,gx:gx,gy:gy,gz:gz};
-}
-
-function buildCube(){
-  for(var i=0;i<cubies.length;i++)scene.remove(cubies[i].group);
-  cubies=[];
-  var coords=gridCoords(cubeSize);
-  for(var xi=0;xi<coords.length;xi++)
-    for(var yi=0;yi<coords.length;yi++)
-      for(var zi=0;zi<coords.length;zi++){
-        var c=createCubie(coords[xi],coords[yi],coords[zi],cubeSize);
-        scene.add(c.group); cubies.push(c);
-      }
-}
-
-// ── Move system ───────────────────────────────────────────────
-var MAXIS={
-  R:new THREE.Vector3(1,0,0),   Ri:new THREE.Vector3(-1,0,0),
-  L:new THREE.Vector3(-1,0,0),  Li:new THREE.Vector3(1,0,0),
-  M:new THREE.Vector3(-1,0,0),  Mi:new THREE.Vector3(1,0,0),
-  U:new THREE.Vector3(0,1,0),   Ui:new THREE.Vector3(0,-1,0),
-  D:new THREE.Vector3(0,-1,0),  Di:new THREE.Vector3(0,1,0),
-  E:new THREE.Vector3(0,-1,0),  Ei:new THREE.Vector3(0,1,0),
-  F:new THREE.Vector3(0,0,1),   Fi:new THREE.Vector3(0,0,-1),
-  B:new THREE.Vector3(0,0,-1),  Bi:new THREE.Vector3(0,0,1),
-  S:new THREE.Vector3(0,0,1),   Si:new THREE.Vector3(0,0,-1),
-};
-var MBASE={R:'R',Ri:'R',L:'L',Li:'L',M:'M',Mi:'M',U:'U',Ui:'U',D:'D',Di:'D',E:'E',Ei:'E',F:'F',Fi:'F',B:'B',Bi:'B',S:'S',Si:'S'};
-
-function layerFilter(base){
-  var h=half();
-  if(base==='R')return function(c){return Math.abs(c.gx-h)<.01;};
-  if(base==='L')return function(c){return Math.abs(c.gx+h)<.01;};
-  if(base==='M')return function(c){return Math.abs(c.gx)<.01;};
-  if(base==='U')return function(c){return Math.abs(c.gy-h)<.01;};
-  if(base==='D')return function(c){return Math.abs(c.gy+h)<.01;};
-  if(base==='E')return function(c){return Math.abs(c.gy)<.01;};
-  if(base==='F')return function(c){return Math.abs(c.gz-h)<.01;};
-  if(base==='B')return function(c){return Math.abs(c.gz+h)<.01;};
-  if(base==='S')return function(c){return Math.abs(c.gz)<.01;};
-}
-
-var SNAPS=[0,.5,Math.SQRT1_2,Math.sqrt(.75),1];
-function snapC(v){var best=0,bd=Infinity;for(var i=0;i<SNAPS.length;i++)for(var s=-1;s<=1;s+=2){var d=Math.abs(v-s*SNAPS[i]);if(d<bd){bd=d;best=s*SNAPS[i];}}return best;}
-function snapQ(obj){var q=obj.quaternion;q.set(snapC(q.x),snapC(q.y),snapC(q.z),snapC(q.w));q.normalize();}
-function ease(t){return t*t*(3-2*t);}
-
-function processQueue(){
-  if(!animQueue.length){animating=false;return;}
-  animating=true;
-  var mv=animQueue.shift(),base=MBASE[mv],axis=MAXIS[mv];
-  var aff=cubies.filter(layerFilter(base));
-  var pivot=new THREE.Group();scene.add(pivot);
-  for(var i=0;i<aff.length;i++)pivot.attach(aff[i].group);
-  var t0=performance.now(),prev=0;
-  function frame(now){
-    var t=Math.min(1,(now-t0)/130),a=ease(t)*(Math.PI/2);
-    pivot.rotateOnAxis(axis,a-prev);prev=a;
-    if(t<1){requestAnimationFrame(frame);return;}
-    for(var i=0;i<aff.length;i++){
-      var c=aff[i];scene.attach(c.group);
-      var nx=Math.round(c.group.position.x/STEP*2)/2*STEP;
-      var ny=Math.round(c.group.position.y/STEP*2)/2*STEP;
-      var nz=Math.round(c.group.position.z/STEP*2)/2*STEP;
-      c.group.position.set(nx,ny,nz);
-      c.gx=nx/STEP;c.gy=ny/STEP;c.gz=nz/STEP;
-      snapQ(c.group);
-    }
-    scene.remove(pivot);
-    moveCount++;
-    document.getElementById('counter').textContent='Tahy: '+moveCount;
-    addToHistory(mv);
-    if(!timerRunning)startTimer();
-    if(!animQueue.length)checkSolved();
-    setTimeout(processQueue,0);
-  }
-  requestAnimationFrame(frame);
-}
-function doMove(mv){animQueue.push(mv);if(!animating)processQueue();}
-
-// ── History ───────────────────────────────────────────────────
-function addToHistory(mv){
-  var isM=mv==='M'||mv==='Mi'||mv==='E'||mv==='Ei'||mv==='S'||mv==='Si';
-  var label=mv.replace('i',"'");
-  moveHistory.push({label:label,middle:isM});
-  if(moveHistory.length>50)moveHistory.shift();
-  renderHistory();
-}
-function renderHistory(){
-  var list=document.getElementById('seq-list');list.innerHTML='';
-  for(var i=0;i<moveHistory.length;i++){
-    var span=document.createElement('span');
-    span.className='mv '+(moveHistory[i].middle?'mv-middle':'mv-outer')+(i===moveHistory.length-1?' mv-new':'');
-    span.textContent=moveHistory[i].label;
-    list.appendChild(span);
-  }
-  list.scrollLeft=list.scrollWidth;
-}
-function clearHistory(){moveHistory=[];document.getElementById('seq-list').innerHTML='';}
-
-// ── Timer ─────────────────────────────────────────────────────
-function startTimer(){
-  timerRunning=true;timerStart=Date.now();clearInterval(timerInterval);
-  timerInterval=setInterval(function(){
-    var el=Date.now()-timerStart,s=Math.floor(el/1000)%60,m=Math.floor(el/60000);
-    document.getElementById('timer').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-  },500);
-}
-function stopTimer(){clearInterval(timerInterval);timerRunning=false;}
-function resetTimer(){stopTimer();document.getElementById('timer').textContent='00:00';}
-
-// ── Solved ────────────────────────────────────────────────────
-function isSolved(){
-  if(faceTextures.U||faceTextures.D||faceTextures.F||faceTextures.B||faceTextures.R||faceTextures.L) return false; // s obrázky nekontrolujeme
-  var h=half();
-  var checks=[
-    {axis:'gx',val:+h,ci:1},{axis:'gx',val:-h,ci:2},
-    {axis:'gy',val:+h,ci:3},{axis:'gy',val:-h,ci:4},
-    {axis:'gz',val:+h,ci:5},{axis:'gz',val:-h,ci:6},
+  var SLOT=[
+    {pos:[H+SD,0,0],face:'R'},{pos:[-(H+SD),0,0],face:'L'},
+    {pos:[0,H+SD,0],face:'U'},{pos:[0,-(H+SD),0],face:'D'},
+    {pos:[0,0,H+SD],face:'F'},{pos:[0,0,-(H+SD)],face:'B'},
   ];
-  for(var f=0;f<checks.length;f++){
-    var ch=checks[f],ref=null;
+
+  function gridCoords(N){var c=[];for(var i=0;i<N;i++)c.push(i-(N-1)/2);return c;}
+  function half(){return(cubeSize-1)/2;}
+
+  // ── Image tile helper ─────────────────────────────────────────
+  // For a face with image, each cubie's sticker gets a UV-cropped texture
+  // N=cubeSize, slot determines which tile (row,col)
+
+  function getTileTexture(faceKey, tileRow, tileCol, N) {
+    var img = faceTextures[faceKey];
+    if (!img) return null;
+    var canvas = document.createElement('canvas');
+    var tw = Math.floor(img.width / N), th = Math.floor(img.height / N);
+    canvas.width = tw; canvas.height = th;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, tileCol*tw, tileRow*th, tw, th, 0, 0, tw, th);
+    var tex = new THREE.CanvasTexture(canvas);
+    return tex;
+  }
+
+  // Map (gx,gy,gz) → tile (row,col) for each face
+  function getTileRC(face, c, N) {
+    var h=(N-1)/2;
+    if (face==='U') { // pohled shora: row=gz+h, col=gx+h
+      return {row: Math.round(c.gz+h), col: Math.round(c.gx+h)};
+    }
+    if (face==='D') { // pohled zdola (zrcadlově Z): row=gz+h, col=gx+h
+      return {row: Math.round(c.gz+h), col: Math.round(c.gx+h)};
+    }
+    if (face==='F') { // pohled zepředu: row=h-gy, col=gx+h
+      return {row: Math.round(h-c.gy), col: Math.round(c.gx+h)};
+    }
+    if (face==='B') { // pohled zezadu: row=h-gy, col=h-gx
+      return {row: Math.round(h-c.gy), col: Math.round(h-c.gx)};
+    }
+    if (face==='R') { // pohled zprava: row=h-gy, col=h-gz
+      return {row: Math.round(h-c.gy), col: Math.round(h-c.gz)};
+    }
+    if (face==='L') { // pohled zleva: row=h-gy, col=gz+h
+      return {row: Math.round(h-c.gy), col: Math.round(c.gz+h)};
+    }
+    return {row:0,col:0};
+  }
+
+  function createCubie(gx,gy,gz,N){
+    var g=new THREE.Group();
+    g.position.set(gx*STEP,gy*STEP,gz*STEP);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(SZ,SZ,SZ),new THREE.MeshLambertMaterial({color:BLACK})));
+    var hf=(N-1)/2;
+    var exp=new Set();
+    if(Math.abs(gx-hf)<.01)exp.add(0); if(Math.abs(gx+hf)<.01)exp.add(1);
+    if(Math.abs(gy-hf)<.01)exp.add(2); if(Math.abs(gy+hf)<.01)exp.add(3);
+    if(Math.abs(gz-hf)<.01)exp.add(4); if(Math.abs(gz+hf)<.01)exp.add(5);
+
+    var slotFace=['R','L','U','D','F','B'];
+    for(var i=0;i<6;i++){
+      var mat;
+      if(exp.has(i)){
+        var fk=slotFace[i];
+        var img=faceTextures[fk];
+        if(img){
+          var rc=getTileRC(fk,{gx:gx,gy:gy,gz:gz},N);
+          var tex=getTileTexture(fk,rc.row,rc.col,N);
+          mat=new THREE.MeshLambertMaterial({map:tex});
+        } else {
+          mat=new THREE.MeshLambertMaterial({color:FACE_HEX[fk]});
+        }
+      } else {
+        mat=new THREE.MeshLambertMaterial({color:BLACK});
+      }
+      var m=new THREE.Mesh(makeGeo(i),mat);
+      m.position.set(SLOT[i].pos[0],SLOT[i].pos[1],SLOT[i].pos[2]);
+      g.add(m);
+    }
+    return{group:g,gx:gx,gy:gy,gz:gz};
+  }
+
+  function buildCube(){
+    for(var i=0;i<cubies.length;i++)scene.remove(cubies[i].group);
+    cubies=[];
+    var coords=gridCoords(cubeSize);
+    for(var xi=0;xi<coords.length;xi++)
+      for(var yi=0;yi<coords.length;yi++)
+        for(var zi=0;zi<coords.length;zi++){
+          var c=createCubie(coords[xi],coords[yi],coords[zi],cubeSize);
+          scene.add(c.group); cubies.push(c);
+        }
+  }
+
+  // ── Move system ───────────────────────────────────────────────
+  var MAXIS={
+    R:new THREE.Vector3(1,0,0),   Ri:new THREE.Vector3(-1,0,0),
+    L:new THREE.Vector3(-1,0,0),  Li:new THREE.Vector3(1,0,0),
+    M:new THREE.Vector3(-1,0,0),  Mi:new THREE.Vector3(1,0,0),
+    U:new THREE.Vector3(0,1,0),   Ui:new THREE.Vector3(0,-1,0),
+    D:new THREE.Vector3(0,-1,0),  Di:new THREE.Vector3(0,1,0),
+    E:new THREE.Vector3(0,-1,0),  Ei:new THREE.Vector3(0,1,0),
+    F:new THREE.Vector3(0,0,1),   Fi:new THREE.Vector3(0,0,-1),
+    B:new THREE.Vector3(0,0,-1),  Bi:new THREE.Vector3(0,0,1),
+    S:new THREE.Vector3(0,0,1),   Si:new THREE.Vector3(0,0,-1),
+  };
+  var MBASE={R:'R',Ri:'R',L:'L',Li:'L',M:'M',Mi:'M',U:'U',Ui:'U',D:'D',Di:'D',E:'E',Ei:'E',F:'F',Fi:'F',B:'B',Bi:'B',S:'S',Si:'S'};
+
+  function layerFilter(base){
+    var h=half();
+    if(base==='R')return function(c){return Math.abs(c.gx-h)<.01;};
+    if(base==='L')return function(c){return Math.abs(c.gx+h)<.01;};
+    if(base==='M')return function(c){return Math.abs(c.gx)<.01;};
+    if(base==='U')return function(c){return Math.abs(c.gy-h)<.01;};
+    if(base==='D')return function(c){return Math.abs(c.gy+h)<.01;};
+    if(base==='E')return function(c){return Math.abs(c.gy)<.01;};
+    if(base==='F')return function(c){return Math.abs(c.gz-h)<.01;};
+    if(base==='B')return function(c){return Math.abs(c.gz+h)<.01;};
+    if(base==='S')return function(c){return Math.abs(c.gz)<.01;};
+  }
+
+  var SNAPS=[0,.5,Math.SQRT1_2,Math.sqrt(.75),1];
+  function snapC(v){var best=0,bd=Infinity;for(var i=0;i<SNAPS.length;i++)for(var s=-1;s<=1;s+=2){var d=Math.abs(v-s*SNAPS[i]);if(d<bd){bd=d;best=s*SNAPS[i];}}return best;}
+  function snapQ(obj){var q=obj.quaternion;q.set(snapC(q.x),snapC(q.y),snapC(q.z),snapC(q.w));q.normalize();}
+  function ease(t){return t*t*(3-2*t);}
+
+  function processQueue(){
+    if(!animQueue.length){animating=false;return;}
+    animating=true;
+    var mv=animQueue.shift(),base=MBASE[mv],axis=MAXIS[mv];
+    var aff=cubies.filter(layerFilter(base));
+    var pivot=new THREE.Group();scene.add(pivot);
+    for(var i=0;i<aff.length;i++)pivot.attach(aff[i].group);
+    var t0=performance.now(),prev=0;
+    function frame(now){
+      var t=Math.min(1,(now-t0)/130),a=ease(t)*(Math.PI/2);
+      pivot.rotateOnAxis(axis,a-prev);prev=a;
+      if(t<1){requestAnimationFrame(frame);return;}
+      for(var i=0;i<aff.length;i++){
+        var c=aff[i];scene.attach(c.group);
+        var nx=Math.round(c.group.position.x/STEP*2)/2*STEP;
+        var ny=Math.round(c.group.position.y/STEP*2)/2*STEP;
+        var nz=Math.round(c.group.position.z/STEP*2)/2*STEP;
+        c.group.position.set(nx,ny,nz);
+        c.gx=nx/STEP;c.gy=ny/STEP;c.gz=nz/STEP;
+        snapQ(c.group);
+      }
+      scene.remove(pivot);
+      moveCount++;
+      document.getElementById('counter').textContent='Tahy: '+moveCount;
+      addToHistory(mv);
+      if(!timerRunning)startTimer();
+      if(!animQueue.length)checkSolved();
+      setTimeout(processQueue,0);
+    }
+    requestAnimationFrame(frame);
+  }
+  function doMove(mv){animQueue.push(mv);if(!animating)processQueue();}
+
+  // ── History ───────────────────────────────────────────────────
+  function addToHistory(mv){
+    var isM=mv==='M'||mv==='Mi'||mv==='E'||mv==='Ei'||mv==='S'||mv==='Si';
+    var label=mv.replace('i',"'");
+    moveHistory.push({label:label,middle:isM});
+    if(moveHistory.length>50)moveHistory.shift();
+    renderHistory();
+  }
+  function renderHistory(){
+    var list=document.getElementById('seq-list');list.innerHTML='';
+    for(var i=0;i<moveHistory.length;i++){
+      var span=document.createElement('span');
+      span.className='mv '+(moveHistory[i].middle?'mv-middle':'mv-outer')+(i===moveHistory.length-1?' mv-new':'');
+      span.textContent=moveHistory[i].label;
+      list.appendChild(span);
+    }
+    list.scrollLeft=list.scrollWidth;
+  }
+  function clearHistory(){moveHistory=[];document.getElementById('seq-list').innerHTML='';}
+
+  // ── Timer ─────────────────────────────────────────────────────
+  function startTimer(){
+    timerRunning=true;timerStart=Date.now();clearInterval(timerInterval);
+    timerInterval=setInterval(function(){
+      var el=Date.now()-timerStart,s=Math.floor(el/1000)%60,m=Math.floor(el/60000);
+      document.getElementById('timer').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    },500);
+  }
+  function stopTimer(){clearInterval(timerInterval);timerRunning=false;}
+  function resetTimer(){stopTimer();document.getElementById('timer').textContent='00:00';}
+
+  // ── Solved ────────────────────────────────────────────────────
+  function isSolved(){
+    if(faceTextures.U||faceTextures.D||faceTextures.F||faceTextures.B||faceTextures.R||faceTextures.L) return false; // s obrázky nekontrolujeme
+    var h=half();
+    var checks=[
+      {axis:'gx',val:+h,ci:1},{axis:'gx',val:-h,ci:2},
+      {axis:'gy',val:+h,ci:3},{axis:'gy',val:-h,ci:4},
+      {axis:'gz',val:+h,ci:5},{axis:'gz',val:-h,ci:6},
+    ];
+    for(var f=0;f<checks.length;f++){
+      var ch=checks[f],ref=null;
+      for(var i=0;i<cubies.length;i++){
+        var c=cubies[i];
+        if(Math.abs(c[ch.axis]-ch.val)>.01)continue;
+        var child=c.group.children[ch.ci];
+        if(!child)continue;
+        var col=child.material.color?child.material.color.getHex():0;
+        if(col===BLACK)continue;
+        if(ref===null){ref=col;continue;}
+        if(col!==ref)return false;
+      }
+    }
+    return true;
+  }
+  function checkSolved(){
+    if(isSolved()){
+      if(wasUnsolved){
+        wasUnsolved=false;stopTimer();
+        var t=document.getElementById('timer').textContent;
+        document.getElementById('solved-time').textContent='Čas: '+t+'  ·  Tahy: '+moveCount;
+        var msg=document.getElementById('solved-msg');
+        msg.style.display='block';
+        setTimeout(function(){msg.style.display='none';},4000);
+      }
+    } else { wasUnsolved=true; }
+  }
+
+  // ── Scramble / Reset ──────────────────────────────────────────
+  function scramble(){
+    var mvs=['R','Ri','L','Li','U','Ui','D','Di','F','Fi','B','Bi'],last='';
+    animQueue=[];animating=false;
+    var n=cubeSize===2?10:20;
+    for(var i=0;i<n;i++){var m;do{m=mvs[Math.floor(Math.random()*mvs.length)];}while(m===last);last=m;animQueue.push(m);}
+    moveCount=0;document.getElementById('counter').textContent='Tahy: 0';
+    resetTimer();clearHistory();processQueue();
+  }
+  function resetCube(){
+    animQueue=[];animating=false;moveCount=0;wasUnsolved=false;
+    document.getElementById('counter').textContent='Tahy: 0';
+    document.getElementById('solved-msg').style.display='none';
+    resetTimer();clearHistory();buildCube();
+  }
+  function switchSize(n){
+    cubeSize=n;
+    document.getElementById('btn-3x3').classList.toggle('active',n===3);
+    document.getElementById('btn-2x2').classList.toggle('active',n===2);
+    animQueue=[];animating=false;moveCount=0;wasUnsolved=false;
+    document.getElementById('counter').textContent='Tahy: 0';
+    document.getElementById('solved-msg').style.display='none';
+    resetTimer();clearHistory();buildCube();
+  }
+
+  document.getElementById('btn-scramble').addEventListener('click',scramble);
+  document.getElementById('btn-reset').addEventListener('click',resetCube);
+  document.getElementById('btn-3x3').addEventListener('click',function(){switchSize(3);});
+  document.getElementById('btn-2x2').addEventListener('click',function(){switchSize(2);});
+
+  // ── SOLVER ────────────────────────────────────────────────────
+  // Logická reprezentace kostky jako 54-znakový string
+  // Pořadí: U(0-8) R(9-17) F(18-26) D(27-35) L(36-44) B(45-53)
+  // Každá strana: řádky shora dolů, sloupce zleva doprava (pohled zvenku)
+  //
+  // Náš 3D model má:
+  //   children[1]=+X(R)  children[2]=-X(L)
+  //   children[3]=+Y(U)  children[4]=-Y(D)
+  //   children[5]=+Z(F)  children[6]=-Z(B)
+  //
+  // Mapování 3D pozice → logický index:
+  // U strana (gy=1): pohled shora = Z roste dolů, X roste doprava
+  //   logický U[row*3+col]: row = gz+1, col = gx+1
+  // D strana (gy=-1): pohled zdola = Z roste nahoru (od +1 do -1), X doprava
+  //   row = 1-gz (gz=1→0, gz=-1→2), col = gx+1
+  // F strana (gz=1): pohled zepředu = Y klesá (1→-1) = row, X doprava = col
+  //   row = 1-gy, col = gx+1
+  // B strana (gz=-1): pohled zezadu = Y klesá, X roste zprava doleva
+  //   row = 1-gy, col = 1-gx
+  // R strana (gx=1): pohled zprava = Y klesá, Z klesá (1→-1) = col
+  //   row = 1-gy, col = 1-gz
+  // L strana (gx=-1): pohled zleva = Y klesá, Z roste = col
+  //   row = 1-gy, col = gz+1
+
+  var HEX2F={};
+  HEX2F[0xffdd00]='U'; HEX2F[0xffffff]='D'; HEX2F[0xff7700]='F';
+  HEX2F[0xee2211]='B'; HEX2F[0x1177ee]='R'; HEX2F[0x22bb44]='L';
+
+  function getCubieAt(gx,gy,gz){
     for(var i=0;i<cubies.length;i++){
       var c=cubies[i];
-      if(Math.abs(c[ch.axis]-ch.val)>.01)continue;
-      var child=c.group.children[ch.ci];
-      if(!child)continue;
-      var col=child.material.color?child.material.color.getHex():0;
-      if(col===BLACK)continue;
-      if(ref===null){ref=col;continue;}
-      if(col!==ref)return false;
+      if(Math.abs(c.gx-gx)<.01&&Math.abs(c.gy-gy)<.01&&Math.abs(c.gz-gz)<.01) return c;
     }
+    return null;
   }
-  return true;
-}
-function checkSolved(){
-  if(isSolved()){
-    if(wasUnsolved){
-      wasUnsolved=false;stopTimer();
-      var t=document.getElementById('timer').textContent;
-      document.getElementById('solved-time').textContent='Čas: '+t+'  ·  Tahy: '+moveCount;
-      var msg=document.getElementById('solved-msg');
-      msg.style.display='block';
-      setTimeout(function(){msg.style.display='none';},4000);
+
+  function getStickerFace(cubie, childIdx){
+    var ch=cubie.group.children[childIdx];
+    if(!ch||!ch.material||!ch.material.color) return '?';
+    return HEX2F[ch.material.color.getHex()]||'?';
+  }
+
+  function readCubeStateStr(){
+    var s=new Array(54);
+    // U face (gy=1, child 3): row=gz+1, col=gx+1
+    for(var gz=-1;gz<=1;gz++) for(var gx=-1;gx<=1;gx++){
+      var c=getCubieAt(gx,1,gz);
+      s[0 + (gz+1)*3+(gx+1)] = c?getStickerFace(c,3):'?';
     }
-  } else { wasUnsolved=true; }
-}
-
-// ── Scramble / Reset ──────────────────────────────────────────
-function scramble(){
-  var mvs=['R','Ri','L','Li','U','Ui','D','Di','F','Fi','B','Bi'],last='';
-  animQueue=[];animating=false;
-  var n=cubeSize===2?10:20;
-  for(var i=0;i<n;i++){var m;do{m=mvs[Math.floor(Math.random()*mvs.length)];}while(m===last);last=m;animQueue.push(m);}
-  moveCount=0;document.getElementById('counter').textContent='Tahy: 0';
-  resetTimer();clearHistory();processQueue();
-}
-function resetCube(){
-  animQueue=[];animating=false;moveCount=0;wasUnsolved=false;
-  document.getElementById('counter').textContent='Tahy: 0';
-  document.getElementById('solved-msg').style.display='none';
-  resetTimer();clearHistory();buildCube();
-}
-function switchSize(n){
-  cubeSize=n;
-  document.getElementById('btn-3x3').classList.toggle('active',n===3);
-  document.getElementById('btn-2x2').classList.toggle('active',n===2);
-  animQueue=[];animating=false;moveCount=0;wasUnsolved=false;
-  document.getElementById('counter').textContent='Tahy: 0';
-  document.getElementById('solved-msg').style.display='none';
-  resetTimer();clearHistory();buildCube();
-}
-
-document.getElementById('btn-scramble').addEventListener('click',scramble);
-document.getElementById('btn-reset').addEventListener('click',resetCube);
-document.getElementById('btn-3x3').addEventListener('click',function(){switchSize(3);});
-document.getElementById('btn-2x2').addEventListener('click',function(){switchSize(2);});
-
-// ── SOLVER ────────────────────────────────────────────────────
-// Logická reprezentace kostky jako 54-znakový string
-// Pořadí: U(0-8) R(9-17) F(18-26) D(27-35) L(36-44) B(45-53)
-// Každá strana: řádky shora dolů, sloupce zleva doprava (pohled zvenku)
-//
-// Náš 3D model má:
-//   children[1]=+X(R)  children[2]=-X(L)
-//   children[3]=+Y(U)  children[4]=-Y(D)
-//   children[5]=+Z(F)  children[6]=-Z(B)
-//
-// Mapování 3D pozice → logický index:
-// U strana (gy=1): pohled shora = Z roste dolů, X roste doprava
-//   logický U[row*3+col]: row = gz+1, col = gx+1
-// D strana (gy=-1): pohled zdola = Z roste nahoru (od +1 do -1), X doprava
-//   row = 1-gz (gz=1→0, gz=-1→2), col = gx+1
-// F strana (gz=1): pohled zepředu = Y klesá (1→-1) = row, X doprava = col
-//   row = 1-gy, col = gx+1
-// B strana (gz=-1): pohled zezadu = Y klesá, X roste zprava doleva
-//   row = 1-gy, col = 1-gx
-// R strana (gx=1): pohled zprava = Y klesá, Z klesá (1→-1) = col
-//   row = 1-gy, col = 1-gz
-// L strana (gx=-1): pohled zleva = Y klesá, Z roste = col
-//   row = 1-gy, col = gz+1
-
-var HEX2F={};
-HEX2F[0xffdd00]='U'; HEX2F[0xffffff]='D'; HEX2F[0xff7700]='F';
-HEX2F[0xee2211]='B'; HEX2F[0x1177ee]='R'; HEX2F[0x22bb44]='L';
-
-function getCubieAt(gx,gy,gz){
-  for(var i=0;i<cubies.length;i++){
-    var c=cubies[i];
-    if(Math.abs(c.gx-gx)<.01&&Math.abs(c.gy-gy)<.01&&Math.abs(c.gz-gz)<.01) return c;
-  }
-  return null;
-}
-
-function getStickerFace(cubie, childIdx){
-  var ch=cubie.group.children[childIdx];
-  if(!ch||!ch.material||!ch.material.color) return '?';
-  return HEX2F[ch.material.color.getHex()]||'?';
-}
-
-function readCubeStateStr(){
-  var s=new Array(54);
-  // U face (gy=1, child 3): row=gz+1, col=gx+1
-  for(var gz=-1;gz<=1;gz++) for(var gx=-1;gx<=1;gx++){
-    var c=getCubieAt(gx,1,gz);
-    s[0 + (gz+1)*3+(gx+1)] = c?getStickerFace(c,3):'?';
-  }
-  // R face (gx=1, child 1): row=1-gy, col=1-gz
-  for(var gy=1;gy>=-1;gy--) for(var gz=1;gz>=-1;gz--){
-    var c=getCubieAt(1,gy,gz);
-    s[9 + (1-gy)*3+(1-gz)] = c?getStickerFace(c,1):'?';
-  }
-  // F face (gz=1, child 5): row=1-gy, col=gx+1
-  for(var gy=1;gy>=-1;gy--) for(var gx=-1;gx<=1;gx++){
-    var c=getCubieAt(gx,gy,1);
-    s[18 + (1-gy)*3+(gx+1)] = c?getStickerFace(c,5):'?';
-  }
-  // D face (gy=-1, child 4): row=1-gz, col=gx+1
-  for(var gz=1;gz>=-1;gz--) for(var gx=-1;gx<=1;gx++){
-    var c=getCubieAt(gx,-1,gz);
-    s[27 + (1-gz)*3+(gx+1)] = c?getStickerFace(c,4):'?';
-  }
-  // L face (gx=-1, child 2): row=1-gy, col=gz+1
-  for(var gy=1;gy>=-1;gy--) for(var gz=-1;gz<=1;gz++){
-    var c=getCubieAt(-1,gy,gz);
-    s[36 + (1-gy)*3+(gz+1)] = c?getStickerFace(c,2):'?';
-  }
-  // B face (gz=-1, child 6): row=1-gy, col=1-gx
-  for(var gy=1;gy>=-1;gy--) for(var gx=1;gx>=-1;gx--){
-    var c=getCubieAt(gx,gy,-1);
-    s[45 + (1-gy)*3+(1-gx)] = c?getStickerFace(c,6):'?';
-  }
-  return s.join('');
-}
-
-// Logické tahy na 54-znakovém stringu
-// Cycle (a,b,c,d): s[a]←s[b]←s[c]←s[d]←s[a]
-function applyLogicalMove(str,cycles){
-  var s=str.split('');
-  for(var i=0;i<cycles.length;i++){
-    var c=cycles[i],tmp=s[c[3]];
-    s[c[3]]=s[c[2]];s[c[2]]=s[c[1]];s[c[1]]=s[c[0]];s[c[0]]=tmp;
-  }
-  return s.join('');
-}
-
-// Ověřené cykly — U=0..8, R=9..17, F=18..26, D=27..35, L=36..44, B=45..53
-// Každá strana uložena row-major (pohled zvenku), řádky shora, sloupce zleva
-var LCYC={
-  U:[[0,2,8,6],[1,5,7,3],[18,9,47,38],[19,10,46,37],[20,11,45,36]],
-  D:[[27,29,35,33],[28,32,34,30],[24,15,51,38+6],[25,16,50,37+6],[26,17,45+8,36+6]],
-  R:[[9,11,17,15],[10,14,16,12],[2,47,35,20],[5,44,32,23],[8,41,29,26]],
-  L:[[36,38,44,42],[37,41,43,39],[0,18,27,53],[3,21,30,50],[6,24,33,47]],
-  F:[[18,20,26,24],[19,23,25,21],[8,9,27,44],[7,12,28,41],[6,15,29,38]],
-  B:[[45,47,53,51],[46,50,52,48],[2,36,33,17],[1,39,34,14],[0,42,35,11]],
-};
-
-var LFNS={};
-(function(){
-  function make(cyc){return function(s){return applyLogicalMove(s,cyc);};}
-  function inv(fn){return function(s){return fn(fn(fn(s)));};};
-  LFNS.U=make(LCYC.U);  LFNS.Ui=inv(LFNS.U);
-  LFNS.D=make(LCYC.D);  LFNS.Di=inv(LFNS.D);
-  LFNS.R=make(LCYC.R);  LFNS.Ri=inv(LFNS.R);
-  LFNS.L=make(LCYC.L);  LFNS.Li=inv(LFNS.L);
-  LFNS.F=make(LCYC.F);  LFNS.Fi=inv(LFNS.F);
-  LFNS.B=make(LCYC.B);  LFNS.Bi=inv(LFNS.B);
-})();
-
-var SOLVED_STR='UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDLLLLLLLLLBBBBBBBBB';
-var SMOVES=['U','Ui','D','Di','R','Ri','L','Li','F','Fi','B','Bi'];
-var SOPP={U:'D',D:'U',R:'L',L:'R',F:'B',B:'F'};
-function sb(m){return m[0];}
-
-function solveIDA(startStr){
-  if(startStr===SOLVED_STR) return [];
-  for(var d=1;d<=22;d++){
-    var res=[];
-    if(idaDFS(startStr,'','',d,res)) return res;
-  }
-  return null;
-}
-function idaDFS(state,last,last2,depth,res){
-  if(state===SOLVED_STR) return true;
-  if(depth===0) return false;
-  for(var i=0;i<SMOVES.length;i++){
-    var mv=SMOVES[i], b=sb(mv), lb=sb(last), l2b=sb(last2);
-    if(b===lb) continue;
-    if(SOPP[b]===lb && b===l2b) continue;
-    res.push(mv);
-    if(idaDFS(LFNS[mv](state),mv,last,depth-1,res)) return true;
-    res.pop();
-  }
-  return false;
-}
-
-var solverSolution=[], solverStep=0;
-
-function openSolver(){
-  document.getElementById('solver-panel').style.display='block';
-  document.getElementById('solver-status').textContent='Čtu stav kostky...';
-  document.getElementById('solver-moves').innerHTML='';
-  document.getElementById('solver-play').style.display='none';
-  solverSolution=[]; solverStep=0;
-  setTimeout(function(){
-    if(cubeSize!==3){
-      document.getElementById('solver-status').textContent='Solver funguje pouze pro 3×3.';
-      return;
+    // R face (gx=1, child 1): row=1-gy, col=1-gz
+    for(var gy=1;gy>=-1;gy--) for(var gz=1;gz>=-1;gz--){
+      var c=getCubieAt(1,gy,gz);
+      s[9 + (1-gy)*3+(1-gz)] = c?getStickerFace(c,1):'?';
     }
-    var stStr=readCubeStateStr();
-    if(stStr.indexOf('?')!==-1){
-      document.getElementById('solver-status').textContent='❌ Chyba čtení stavu kostky.';
-      return;
+    // F face (gz=1, child 5): row=1-gy, col=gx+1
+    for(var gy=1;gy>=-1;gy--) for(var gx=-1;gx<=1;gx++){
+      var c=getCubieAt(gx,gy,1);
+      s[18 + (1-gy)*3+(gx+1)] = c?getStickerFace(c,5):'?';
     }
-    if(stStr===SOLVED_STR){
-      document.getElementById('solver-status').textContent='✅ Kostka je již složená!';
-      return;
+    // D face (gy=-1, child 4): row=1-gz, col=gx+1
+    for(var gz=1;gz>=-1;gz--) for(var gx=-1;gx<=1;gx++){
+      var c=getCubieAt(gx,-1,gz);
+      s[27 + (1-gz)*3+(gx+1)] = c?getStickerFace(c,4):'?';
     }
-    document.getElementById('solver-status').textContent='Hledám řešení... (může trvat pár sekund)';
+    // L face (gx=-1, child 2): row=1-gy, col=gz+1
+    for(var gy=1;gy>=-1;gy--) for(var gz=-1;gz<=1;gz++){
+      var c=getCubieAt(-1,gy,gz);
+      s[36 + (1-gy)*3+(gz+1)] = c?getStickerFace(c,2):'?';
+    }
+    // B face (gz=-1, child 6): row=1-gy, col=1-gx
+    for(var gy=1;gy>=-1;gy--) for(var gx=1;gx>=-1;gx--){
+      var c=getCubieAt(gx,gy,-1);
+      s[45 + (1-gy)*3+(1-gx)] = c?getStickerFace(c,6):'?';
+    }
+    return s.join('');
+  }
+
+  // Logické tahy na 54-znakovém stringu
+  // Cycle (a,b,c,d): s[a]←s[b]←s[c]←s[d]←s[a]
+  function applyLogicalMove(str,cycles){
+    var s=str.split('');
+    for(var i=0;i<cycles.length;i++){
+      var c=cycles[i],tmp=s[c[3]];
+      s[c[3]]=s[c[2]];s[c[2]]=s[c[1]];s[c[1]]=s[c[0]];s[c[0]]=tmp;
+    }
+    return s.join('');
+  }
+
+  // Ověřené cykly — U=0..8, R=9..17, F=18..26, D=27..35, L=36..44, B=45..53
+  // Každá strana uložena row-major (pohled zvenku), řádky shora, sloupce zleva
+  var LCYC={
+    U:[[0,2,8,6],[1,5,7,3],[18,9,47,38],[19,10,46,37],[20,11,45,36]],
+    D:[[27,29,35,33],[28,32,34,30],[24,15,51,38+6],[25,16,50,37+6],[26,17,45+8,36+6]],
+    R:[[9,11,17,15],[10,14,16,12],[2,47,35,20],[5,44,32,23],[8,41,29,26]],
+    L:[[36,38,44,42],[37,41,43,39],[0,18,27,53],[3,21,30,50],[6,24,33,47]],
+    F:[[18,20,26,24],[19,23,25,21],[8,9,27,44],[7,12,28,41],[6,15,29,38]],
+    B:[[45,47,53,51],[46,50,52,48],[2,36,33,17],[1,39,34,14],[0,42,35,11]],
+  };
+
+  var LFNS={};
+  (function(){
+    function make(cyc){return function(s){return applyLogicalMove(s,cyc);};}
+    function inv(fn){return function(s){return fn(fn(fn(s)));};};
+    LFNS.U=make(LCYC.U);  LFNS.Ui=inv(LFNS.U);
+    LFNS.D=make(LCYC.D);  LFNS.Di=inv(LFNS.D);
+    LFNS.R=make(LCYC.R);  LFNS.Ri=inv(LFNS.R);
+    LFNS.L=make(LCYC.L);  LFNS.Li=inv(LFNS.L);
+    LFNS.F=make(LCYC.F);  LFNS.Fi=inv(LFNS.F);
+    LFNS.B=make(LCYC.B);  LFNS.Bi=inv(LFNS.B);
+  })();
+
+  var SOLVED_STR='UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDLLLLLLLLLBBBBBBBBB';
+  var SMOVES=['U','Ui','D','Di','R','Ri','L','Li','F','Fi','B','Bi'];
+  var SOPP={U:'D',D:'U',R:'L',L:'R',F:'B',B:'F'};
+  function sb(m){return m[0];}
+
+  function solveIDA(startStr){
+    if(startStr===SOLVED_STR) return [];
+    for(var d=1;d<=22;d++){
+      var res=[];
+      if(idaDFS(startStr,'','',d,res)) return res;
+    }
+    return null;
+  }
+  function idaDFS(state,last,last2,depth,res){
+    if(state===SOLVED_STR) return true;
+    if(depth===0) return false;
+    for(var i=0;i<SMOVES.length;i++){
+      var mv=SMOVES[i], b=sb(mv), lb=sb(last), l2b=sb(last2);
+      if(b===lb) continue;
+      if(SOPP[b]===lb && b===l2b) continue;
+      res.push(mv);
+      if(idaDFS(LFNS[mv](state),mv,last,depth-1,res)) return true;
+      res.pop();
+    }
+    return false;
+  }
+
+  var solverSolution=[], solverStep=0;
+
+  function openSolver(){
+    document.getElementById('solver-panel').style.display='block';
+    document.getElementById('solver-status').textContent='Čtu stav kostky...';
+    document.getElementById('solver-moves').innerHTML='';
+    document.getElementById('solver-play').style.display='none';
+    solverSolution=[]; solverStep=0;
     setTimeout(function(){
-      var sol=solveIDA(stStr);
-      if(!sol){
-        document.getElementById('solver-status').textContent='❌ Řešení nenalezeno.';
+      if(cubeSize!==3){
+        document.getElementById('solver-status').textContent='Solver funguje pouze pro 3×3.';
         return;
       }
-      solverSolution=sol; solverStep=0;
-      document.getElementById('solver-status').textContent='Nalezeno '+sol.length+' tahů:';
-      var div=document.getElementById('solver-moves'); div.innerHTML='';
-      for(var i=0;i<sol.length;i++){
-        var sp=document.createElement('span');
-        sp.className='smv'; sp.textContent=sol[i].replace('i',"'");
-        div.appendChild(sp);
+      var stStr=readCubeStateStr();
+      if(stStr.indexOf('?')!==-1){
+        document.getElementById('solver-status').textContent='❌ Chyba čtení stavu kostky.';
+        return;
       }
-      document.getElementById('solver-play').style.display='block';
-    },50);
-  },30);
-}
+      if(stStr===SOLVED_STR){
+        document.getElementById('solver-status').textContent='✅ Kostka je již složená!';
+        return;
+      }
+      document.getElementById('solver-status').textContent='Hledám řešení... (může trvat pár sekund)';
+      setTimeout(function(){
+        var sol=solveIDA(stStr);
+        if(!sol){
+          document.getElementById('solver-status').textContent='❌ Řešení nenalezeno.';
+          return;
+        }
+        solverSolution=sol; solverStep=0;
+        document.getElementById('solver-status').textContent='Nalezeno '+sol.length+' tahů:';
+        var div=document.getElementById('solver-moves'); div.innerHTML='';
+        for(var i=0;i<sol.length;i++){
+          var sp=document.createElement('span');
+          sp.className='smv'; sp.textContent=sol[i].replace('i',"'");
+          div.appendChild(sp);
+        }
+        document.getElementById('solver-play').style.display='block';
+      },50);
+    },30);
+  }
 
-function updateSolverHL(step){
-  var spans=document.getElementById('solver-moves').querySelectorAll('.smv');
-  for(var i=0;i<spans.length;i++)
-    spans[i].className='smv'+(i<step?' done':i===step?' active':'');
-}
+  function updateSolverHL(step){
+    var spans=document.getElementById('solver-moves').querySelectorAll('.smv');
+    for(var i=0;i<spans.length;i++)
+      spans[i].className='smv'+(i<step?' done':i===step?' active':'');
+  }
 
-function playSolver(){
-  if(!solverSolution.length) return;
-  document.getElementById('solver-play').style.display='none';
-  solverStep=0;
-  function next(){
-    if(solverStep>=solverSolution.length){
-      document.getElementById('solver-status').textContent='✅ Hotovo!';
-      return;
+  function playSolver(){
+    if(!solverSolution.length) return;
+    document.getElementById('solver-play').style.display='none';
+    solverStep=0;
+    function next(){
+      if(solverStep>=solverSolution.length){
+        document.getElementById('solver-status').textContent='✅ Hotovo!';
+        return;
+      }
+      updateSolverHL(solverStep);
+      doMove(solverSolution[solverStep++]);
+      setTimeout(next,180);
     }
-    updateSolverHL(solverStep);
-    doMove(solverSolution[solverStep++]);
-    setTimeout(next,180);
+    next();
   }
-  next();
-}
 
-document.getElementById('btn-solve').addEventListener('click',openSolver);
-document.getElementById('solver-close').addEventListener('click',function(){document.getElementById('solver-panel').style.display='none';});
-document.getElementById('solver-play').addEventListener('click',playSolver);
 
-// ── IMAGE IMPORT ──────────────────────────────────────────────
-var IMG_FACES=['U','D','F','B','R','L'];
-var imgFiles={};
 
-function buildImgPanel(){
-  var grid=document.getElementById('face-grid');
-  grid.innerHTML='';
-  IMG_FACES.forEach(function(fk){
-    var slot=document.createElement('div');
-    slot.className='face-slot'; slot.id='slot-'+fk;
-    var lbl=document.createElement('div');
-    lbl.className='face-label';
-    lbl.style.background=FACE_HEX[fk].toString(16).padStart(6,'0').replace(/^/,'#');
-    lbl.style.color=(fk==='U'||fk==='D')?'#222':'#fff';
-    lbl.textContent=FACE_NAMES[fk];
-    var inp=document.createElement('input');
-    inp.type='file'; inp.accept='image/*'; inp.id='file-'+fk;
-    var prev=document.createElement('img');
-    prev.className='face-preview'; prev.id='prev-'+fk;
-    var hint=document.createElement('div');
-    hint.className='face-hint'; hint.textContent='Klikni pro výběr obrázku';
-    slot.appendChild(lbl); slot.appendChild(inp); slot.appendChild(prev); slot.appendChild(hint);
-    slot.addEventListener('click',function(f){ return function(){ document.getElementById('file-'+f).click(); };}(fk));
-    inp.addEventListener('change',function(f){ return function(e){
-      var file=e.target.files[0]; if(!file) return;
-      var reader=new FileReader();
-      reader.onload=function(ev){
-        var img=new Image();
-        img.onload=function(){
-          imgFiles[f]=img;
-          var pr=document.getElementById('prev-'+f);
-          pr.src=ev.target.result; pr.style.display='block';
-          document.getElementById('slot-'+f).classList.add('has-img');
-          document.querySelector('#slot-'+f+' .face-hint').textContent='✅ Nahráno';
+  // ── IMAGE IMPORT ──────────────────────────────────────────────
+  var IMG_FACES=['U','D','F','B','R','L'];
+  var imgFiles={};
+
+  function buildImgPanel(){
+    var grid=document.getElementById('face-grid');
+    grid.innerHTML='';
+    IMG_FACES.forEach(function(fk){
+      var slot=document.createElement('div');
+      slot.className='face-slot'; slot.id='slot-'+fk;
+      var lbl=document.createElement('div');
+      lbl.className='face-label';
+      lbl.style.background=FACE_HEX[fk].toString(16).padStart(6,'0').replace(/^/,'#');
+      lbl.style.color=(fk==='U'||fk==='D')?'#222':'#fff';
+      lbl.textContent=FACE_NAMES[fk];
+      var inp=document.createElement('input');
+      inp.type='file'; inp.accept='image/*'; inp.id='file-'+fk;
+      var prev=document.createElement('img');
+      prev.className='face-preview'; prev.id='prev-'+fk;
+      var hint=document.createElement('div');
+      hint.className='face-hint'; hint.textContent='Klikni pro výběr obrázku';
+      slot.appendChild(lbl); slot.appendChild(inp); slot.appendChild(prev); slot.appendChild(hint);
+      slot.addEventListener('click',function(f){ return function(){ document.getElementById('file-'+f).click(); };}(fk));
+      inp.addEventListener('change',function(f){ return function(e){
+        var file=e.target.files[0]; if(!file) return;
+        var reader=new FileReader();
+        reader.onload=function(ev){
+          var img=new Image();
+          img.onload=function(){
+            imgFiles[f]=img;
+            var pr=document.getElementById('prev-'+f);
+            pr.src=ev.target.result; pr.style.display='block';
+            document.getElementById('slot-'+f).classList.add('has-img');
+            document.querySelector('#slot-'+f+' .face-hint').textContent='✅ Nahráno';
+          };
+          img.src=ev.target.result;
         };
-        img.src=ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    };}(fk));
-    grid.appendChild(slot);
-  });
-}
-
-document.getElementById('btn-img').addEventListener('click',function(){
-  buildImgPanel();
-  document.getElementById('img-panel').style.display='block';
-});
-document.getElementById('img-close').addEventListener('click',function(){
-  document.getElementById('img-panel').style.display='none';
-});
-document.getElementById('apply-images').addEventListener('click',function(){
-  faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
-  IMG_FACES.forEach(function(fk){ if(imgFiles[fk]) faceTextures[fk]=imgFiles[fk]; });
-  document.getElementById('img-panel').style.display='none';
-  buildCube();
-});
-document.getElementById('reset-images').addEventListener('click',function(){
-  faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
-  imgFiles={};
-  document.getElementById('img-panel').style.display='none';
-  buildCube();
-});
-
-// ── Orbit / Drag ──────────────────────────────────────────────
-var raycaster=new THREE.Raycaster();
-var CAM_R=13.0, DRAG_THR=10;
-
-function raycast(cx,cy){
-  var ndc=new THREE.Vector2((cx/innerWidth)*2-1,(cy/innerHeight)*-2+1);
-  raycaster.setFromCamera(ndc,camera);
-  var meshes=[];
-  for(var i=0;i<cubies.length;i++){var ch=cubies[i].group.children;for(var j=0;j<ch.length;j++)meshes.push(ch[j]);}
-  var hits=raycaster.intersectObjects(meshes);
-  if(!hits.length)return null;
-  var hit=hits[0],hc=null;
-  for(var i=0;i<cubies.length;i++){if(cubies[i].group.children.indexOf(hit.object)!==-1){hc=cubies[i];break;}}
-  if(!hc)return null;
-  var norm=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
-  return{cubie:hc,normal:norm};
-}
-function inferMove(hitNormal,dx,dy,hitCubie){
-  var nx=Math.round(hitNormal.x),ny=Math.round(hitNormal.y),nz=Math.round(hitNormal.z);
-  var sY=Math.sin(rotY),cY=Math.cos(rotY),sX=Math.sin(rotX),cX=Math.cos(rotX);
-  var right=new THREE.Vector3(cY,0,-sY);
-  var up=new THREE.Vector3(sY*sX,cX,cY*sX);
-  var drag=new THREE.Vector3().addScaledVector(right,dx).addScaledVector(up,-dy).normalize();
-  var fN=new THREE.Vector3(nx,ny,nz);
-  drag.addScaledVector(fN,-drag.dot(fN)).normalize();
-  var axes=[new THREE.Vector3(1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,-1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,-1)];
-  var best=null,bd=0;
-  for(var i=0;i<axes.length;i++){var d=drag.dot(axes[i]);if(d>bd){bd=d;best=axes[i];}}
-  if(!best)return null;
-  var rA=new THREE.Vector3().crossVectors(fN,best).normalize();
-  var rx=Math.round(rA.x),ry=Math.round(rA.y),rz=Math.round(rA.z);
-  var cx=hitCubie.gx,cy=hitCubie.gy,cz=hitCubie.gz,h=half();
-  var isMX=cubeSize===3&&Math.abs(cx)<.01;
-  var isMY=cubeSize===3&&Math.abs(cy)<.01;
-  var isMZ=cubeSize===3&&Math.abs(cz)<.01;
-  if(ry!==0){if(Math.abs(cy-h)<.01)return ry>0?'U':'Ui';if(Math.abs(cy+h)<.01)return ry>0?'Di':'D';if(isMY)return ry>0?'E':'Ei';return ry>0?'U':'Ui';}
-  if(rx!==0){if(Math.abs(cx-h)<.01)return rx>0?'R':'Ri';if(Math.abs(cx+h)<.01)return rx>0?'Li':'L';if(isMX)return rx>0?'Mi':'M';return rx>0?'R':'Ri';}
-  if(rz!==0){if(Math.abs(cz-h)<.01)return rz>0?'F':'Fi';if(Math.abs(cz+h)<.01)return rz>0?'Bi':'B';if(isMZ)return rz>0?'S':'Si';return rz>0?'F':'Fi';}
-  return null;
-}
-function onDown(cx,cy){dragState={mode:'undecided',sx:cx,sy:cy,lx:cx,ly:cy,hit:raycast(cx,cy)};}
-function onMove(cx,cy){
-  if(!dragState)return;
-  var dx=cx-dragState.sx,dy=cy-dragState.sy;
-  if(dragState.mode==='undecided'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR)
-    dragState.mode=dragState.hit?'turn':'orbit';
-  if(dragState.mode==='orbit'){rotY-=(cx-dragState.lx)*.006;rotX+=(cy-dragState.ly)*.006;rotX=Math.max(-1.4,Math.min(1.4,rotX));}
-  dragState.lx=cx;dragState.ly=cy;
-}
-function onUp(cx,cy){
-  if(!dragState)return;
-  var dx=cx-dragState.sx,dy=cy-dragState.sy;
-  if(dragState.mode==='turn'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR&&dragState.hit){
-    var mv=inferMove(dragState.hit.normal,dx,dy,dragState.hit.cubie);
-    if(mv)doMove(mv);
+        reader.readAsDataURL(file);
+      };}(fk));
+      grid.appendChild(slot);
+    });
   }
-  dragState=null;
-}
-renderer.domElement.addEventListener('mousedown',function(e){onDown(e.clientX,e.clientY);});
-window.addEventListener('mousemove',function(e){onMove(e.clientX,e.clientY);});
-window.addEventListener('mouseup',function(e){onUp(e.clientX,e.clientY);});
-renderer.domElement.addEventListener('touchstart',function(e){e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
-renderer.domElement.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
-renderer.domElement.addEventListener('touchend',function(e){e.preventDefault();var t=e.changedTouches[0];onUp(t.clientX,t.clientY);},{passive:false});
 
-// ── Render loop ───────────────────────────────────────────────
-function animate(){
-  requestAnimationFrame(animate);
-  camera.position.set(CAM_R*Math.sin(rotY)*Math.cos(rotX),CAM_R*Math.sin(rotX),CAM_R*Math.cos(rotY)*Math.cos(rotX));
-  camera.lookAt(0,0,0);
-  renderer.render(scene,camera);
-}
-buildCube();
-animate();
+  document.getElementById('btn-img').addEventListener('click',function(){
+    buildImgPanel();
+    document.getElementById('img-panel').style.display='block';
+  });
+  document.getElementById('img-close').addEventListener('click',function(){
+    document.getElementById('img-panel').style.display='none';
+  });
+  document.getElementById('apply-images').addEventListener('click',function(){
+    faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
+    IMG_FACES.forEach(function(fk){ if(imgFiles[fk]) faceTextures[fk]=imgFiles[fk]; });
+    document.getElementById('img-panel').style.display='none';
+    buildCube();
+  });
+  document.getElementById('reset-images').addEventListener('click',function(){
+    faceTextures={U:null,D:null,F:null,B:null,R:null,L:null};
+    imgFiles={};
+    document.getElementById('img-panel').style.display='none';
+    buildCube();
+  });
+
+  // ── Orbit / Drag ──────────────────────────────────────────────
+  var raycaster=new THREE.Raycaster();
+  var CAM_R=13.0, DRAG_THR=10;
+
+  function raycast(cx,cy){
+    var ndc=new THREE.Vector2((cx/innerWidth)*2-1,(cy/innerHeight)*-2+1);
+    raycaster.setFromCamera(ndc,camera);
+    var meshes=[];
+    for(var i=0;i<cubies.length;i++){var ch=cubies[i].group.children;for(var j=0;j<ch.length;j++)meshes.push(ch[j]);}
+    var hits=raycaster.intersectObjects(meshes);
+    if(!hits.length)return null;
+    var hit=hits[0],hc=null;
+    for(var i=0;i<cubies.length;i++){if(cubies[i].group.children.indexOf(hit.object)!==-1){hc=cubies[i];break;}}
+    if(!hc)return null;
+    var norm=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    return{cubie:hc,normal:norm};
+  }
+  function inferMove(hitNormal,dx,dy,hitCubie){
+    var nx=Math.round(hitNormal.x),ny=Math.round(hitNormal.y),nz=Math.round(hitNormal.z);
+    var sY=Math.sin(rotY),cY=Math.cos(rotY),sX=Math.sin(rotX),cX=Math.cos(rotX);
+    var right=new THREE.Vector3(cY,0,-sY);
+    var up=new THREE.Vector3(sY*sX,cX,cY*sX);
+    var drag=new THREE.Vector3().addScaledVector(right,dx).addScaledVector(up,-dy).normalize();
+    var fN=new THREE.Vector3(nx,ny,nz);
+    drag.addScaledVector(fN,-drag.dot(fN)).normalize();
+    var axes=[new THREE.Vector3(1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,-1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,-1)];
+    var best=null,bd=0;
+    for(var i=0;i<axes.length;i++){var d=drag.dot(axes[i]);if(d>bd){bd=d;best=axes[i];}}
+    if(!best)return null;
+    var rA=new THREE.Vector3().crossVectors(fN,best).normalize();
+    var rx=Math.round(rA.x),ry=Math.round(rA.y),rz=Math.round(rA.z);
+    var cx=hitCubie.gx,cy=hitCubie.gy,cz=hitCubie.gz,h=half();
+    var isMX=cubeSize===3&&Math.abs(cx)<.01;
+    var isMY=cubeSize===3&&Math.abs(cy)<.01;
+    var isMZ=cubeSize===3&&Math.abs(cz)<.01;
+    if(ry!==0){if(Math.abs(cy-h)<.01)return ry>0?'U':'Ui';if(Math.abs(cy+h)<.01)return ry>0?'Di':'D';if(isMY)return ry>0?'E':'Ei';return ry>0?'U':'Ui';}
+    if(rx!==0){if(Math.abs(cx-h)<.01)return rx>0?'R':'Ri';if(Math.abs(cx+h)<.01)return rx>0?'Li':'L';if(isMX)return rx>0?'Mi':'M';return rx>0?'R':'Ri';}
+    if(rz!==0){if(Math.abs(cz-h)<.01)return rz>0?'F':'Fi';if(Math.abs(cz+h)<.01)return rz>0?'Bi':'B';if(isMZ)return rz>0?'S':'Si';return rz>0?'F':'Fi';}
+    return null;
+  }
+  function onDown(cx,cy){dragState={mode:'undecided',sx:cx,sy:cy,lx:cx,ly:cy,hit:raycast(cx,cy)};}
+  function onMove(cx,cy){
+    if(!dragState)return;
+    var dx=cx-dragState.sx,dy=cy-dragState.sy;
+    if(dragState.mode==='undecided'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR)
+      dragState.mode=dragState.hit?'turn':'orbit';
+    if(dragState.mode==='orbit'){rotY-=(cx-dragState.lx)*.006;rotX+=(cy-dragState.ly)*.006;rotX=Math.max(-1.4,Math.min(1.4,rotX));}
+    dragState.lx=cx;dragState.ly=cy;
+  }
+  function onUp(cx,cy){
+    if(!dragState)return;
+    var dx=cx-dragState.sx,dy=cy-dragState.sy;
+    if(dragState.mode==='turn'&&Math.sqrt(dx*dx+dy*dy)>=DRAG_THR&&dragState.hit){
+      var mv=inferMove(dragState.hit.normal,dx,dy,dragState.hit.cubie);
+      if(mv)doMove(mv);
+    }
+    dragState=null;
+  }
+  renderer.domElement.addEventListener('mousedown',function(e){onDown(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',function(e){onMove(e.clientX,e.clientY);});
+  window.addEventListener('mouseup',function(e){onUp(e.clientX,e.clientY);});
+  renderer.domElement.addEventListener('touchstart',function(e){e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+  renderer.domElement.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+  renderer.domElement.addEventListener('touchend',function(e){e.preventDefault();var t=e.changedTouches[0];onUp(t.clientX,t.clientY);},{passive:false});
+
+  // ── Render loop ───────────────────────────────────────────────
+  function animate(){
+    requestAnimationFrame(animate);
+    camera.position.set(CAM_R*Math.sin(rotY)*Math.cos(rotX),CAM_R*Math.sin(rotX),CAM_R*Math.cos(rotY)*Math.cos(rotX));
+    camera.lookAt(0,0,0);
+    renderer.render(scene,camera);
+  }
+  buildCube();
+  animate();
 </script>
 </body>
 </html>
